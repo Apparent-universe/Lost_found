@@ -1,0 +1,96 @@
+<template>
+  <div class="register-container">
+    <el-form ref="form" :model="registerForm" label-width="80px" class="register-form">
+      <h2>用户注册</h2>
+      <el-form-item label="用户名">
+        <el-input v-model="registerForm.username" />
+      </el-form-item>
+      <el-form-item label="密码">
+        <el-input v-model="registerForm.password" type="password" show-password />
+      </el-form-item>
+      <el-form-item label="确认密码">
+        <el-input v-model="registerForm.confirmPassword" type="password" show-password />
+      </el-form-item>
+      <el-form-item label="角色">
+        <el-select v-model="registerForm.role" placeholder="请选择角色">
+          <el-option label="探员" value="agent" />
+          <el-option label="管理员" value="admin" />
+        </el-select>
+      </el-form-item>
+      <el-form-item>
+        <el-button type="primary" @click="onSubmit">注册</el-button>
+        <el-button @click="onCancel">取消</el-button>
+      </el-form-item>
+      <div class="login-link">
+        <p>已有账号？<a @click="$router.push('/login')">立即登录</a></p>
+      </div>
+    </el-form>
+  </div>
+</template>
+
+<script>
+import { defineComponent } from 'vue';
+import userApi from '@/api/user';
+
+export default defineComponent({
+  data() {
+    return {
+      registerForm: {
+        username: '',
+        password: '',
+        confirmPassword: '',
+        role: 'agent'
+      }
+    };
+  },
+  methods: {
+    async onSubmit() {
+      if (this.registerForm.password !== this.registerForm.confirmPassword) {
+        this.$message.error('两次输入的密码不一致');
+        return;
+      }
+      
+      try {
+        // 调用注册API
+        await userApi.register(this.registerForm);
+        this.$message.success('注册成功，请登录');
+        this.$router.push('/login');
+      } catch (error) {
+        this.$message.error('注册失败，请检查输入内容');
+        console.error(error);
+      }
+    },
+    onCancel() {
+      this.$router.push('/');
+    }
+  }
+});
+</script>
+
+<style scoped>
+.register-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f7fa;
+}
+
+.register-form {
+  background-color: white;
+  padding: 30px;
+  border-radius: 8px;
+  box-shadow: 0 2px 12px 0 rgba(0,0,0,0.1);
+  width: 400px;
+}
+
+.login-link {
+  text-align: center;
+  margin-top: 20px;
+}
+
+.login-link a {
+  color: #409EFF;
+  cursor: pointer;
+}
+</style>
