@@ -28,43 +28,46 @@
   </div>
 </template>
 
-<script>
-import { defineComponent } from 'vue';
+<script setup>
+import { ref } from 'vue';
 import userApi from '@/api/user';
 
-export default defineComponent({
-  data() {
-    return {
-      registerForm: {
-        username: '',
-        password: '',
-        confirmPassword: '',
-        role: 'agent'
-      }
-    };
-  },
-  methods: {
-    async onSubmit() {
-      if (this.registerForm.password !== this.registerForm.confirmPassword) {
-        this.$message.error('两次输入的密码不一致');
-        return;
-      }
-      
-      try {
-        // 调用注册API
-        await userApi.register(this.registerForm);
-        this.$message.success('注册成功，请登录');
-        this.$router.push('/login');
-      } catch (error) {
-        this.$message.error('注册失败，请检查输入内容');
-        console.error(error);
-      }
-    },
-    onCancel() {
-      this.$router.push('/');
-    }
-  }
+// 表单数据
+const registerForm = ref({
+  username: '',
+  password: '',
+  confirmPassword: '',
+  role: 'agent'
 });
+
+// 提交注册表单
+const onSubmit = async () => {
+  if (registerForm.value.password !== registerForm.value.confirmPassword) {
+    alert('两次输入的密码不一致');
+    return;
+  }
+  
+  try {
+    // 调用注册API
+    await userApi.register(registerForm.value);
+    alert('注册成功，请登录');
+    window.location.href = '/login';
+  } catch (error) {
+    alert('注册失败，请检查输入内容');
+    console.error(error);
+  }
+};
+
+// 取消注册
+const onCancel = () => {
+  window.location.href = '/';
+};
+</script>
+
+<script>
+export default {
+  name: 'Register'
+};
 </script>
 
 <style scoped>

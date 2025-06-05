@@ -60,23 +60,28 @@
   </div>
 </template>
 
+<script setup>
+import { ref } from 'vue';
+
+// 轮播图数据
+const slides = [
+  { image: 'https://via.placeholder.com/800x300?text=校园失物招领平台', title: '欢迎使用校园失物招领平台', description: '在这里您可以方便地查找或发布失物和寻物信息' },
+  { image: 'https://via.placeholder.com/800x300?text=快速找到丢失物品', title: '快速找到丢失物品', description: '通过我们的平台，您可以快速浏览最新的失物信息' },
+  { image: 'https://via.placeholder.com/800x300?text=发布您的寻物启事', title: '发布您的寻物启事', description: '简单三步即可发布您的寻物信息，让更多人帮助您寻找' }
+];
+
+// 最新发布数据
+const recentItems = [
+  { image: 'https://via.placeholder.com/300x200?text=钱包', title: '黑色钱包', description: '在图书馆二楼捡到黑色皮质钱包', type: '失物招领', date: '2023-09-15' },
+  { image: 'https://via.placeholder.com/300x200?text=书包', title: '蓝色双肩包', description: '教学楼A区302教室发现蓝色双肩包', type: '失物招领', date: '2023-09-14' },
+  { image: 'https://via.placeholder.com/300x200?text=钥匙', title: '一串钥匙', description: '实验楼一楼大厅服务台拾取', type: '失物招领', date: '2023-09-13' },
+  { image: 'https://via.placeholder.com/300x200?text=手机', title: '红色手机壳iPhone', description: '操场跑道上捡到红色手机壳iPhone 13', type: '失物招领', date: '2023-09-12' }
+];
+</script>
+
 <script>
 export default {
-  data() {
-    return {
-      slides: [
-        { image: 'https://via.placeholder.com/800x300?text=校园失物招领平台', title: '欢迎使用校园失物招领平台', description: '在这里您可以方便地查找或发布失物和寻物信息' },
-        { image: 'https://via.placeholder.com/800x300?text=快速找到丢失物品', title: '快速找到丢失物品', description: '通过我们的平台，您可以快速浏览最新的失物信息' },
-        { image: 'https://via.placeholder.com/800x300?text=发布您的寻物启事', title: '发布您的寻物启事', description: '简单三步即可发布您的寻物信息，让更多人帮助您寻找' }
-      ],
-      recentItems: [
-        { image: 'https://via.placeholder.com/300x200?text=钱包', title: '黑色钱包', description: '在图书馆二楼捡到黑色皮质钱包', type: '失物招领', date: '2023-09-15' },
-        { image: 'https://via.placeholder.com/300x200?text=书包', title: '蓝色双肩包', description: '教学楼A区302教室发现蓝色双肩包', type: '失物招领', date: '2023-09-14' },
-        { image: 'https://via.placeholder.com/300x200?text=钥匙', title: '一串钥匙', description: '实验楼一楼大厅服务台拾取', type: '失物招领', date: '2023-09-13' },
-        { image: 'https://via.placeholder.com/300x200?text=手机', title: '红色手机壳iPhone', description: '操场跑道上捡到红色手机壳iPhone 13', type: '失物招领', date: '2023-09-12' }
-      ]
-    };
-  }
+  name: 'Home'
 };
 </script>
 

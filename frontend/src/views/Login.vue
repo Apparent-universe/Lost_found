@@ -19,47 +19,81 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref } from 'vue';
 import { useUserStore } from '@/store/user';
 import userApi from '@/api/user';
 
-export default {
-  data() {
-    return {
-      loginForm: {
-        username: '',
-        password: ''
-      }
-    };
-  },
-  methods: {
-    async onSubmit() {
-      try {
-        // 使用API模块登录
-        const response = await userApi.login(this.loginForm);
-        
-        // 获取token和用户信息
-        const token = response.data.token;
-        const userData = response.data.user;
-        
-        // 使用Pinia store保存用户信息
-        const userStore = useUserStore();
-        userStore.login(userData, token);
-        
-        // 跳转到首页
-        this.$router.push('/');
-      } catch (error) {
-        this.$message.error('登录失败，请检查用户名和密码');
-        console.error(error);
-      }
-    },
-    onCancel() {
-      this.$router.push('/');
-    }
+// 表单数据
+const loginForm = ref({
+  username: '',
+  password: ''
+});
+
+// 提交登录表单
+const onSubmit = async () => {
+  try {
+    // 使用API模块登录
+    const response = await userApi.login(loginForm.value);
+    
+    // 获取token和用户信息
+    const token = response.data.token;
+    const userData = response.data.user;
+    
+    // 使用Pinia store保存用户信息
+    const userStore = useUserStore();
+    userStore.login(userData, token);
+    
+    // 跳转到首页
+    window.location.href = '/';
+  } catch (error) {
+    // 显示错误提示
+    alert('登录失败，请检查用户名和密码');
+    console.error(error);
   }
+};
+
+// 取消登录
+const onCancel = () => {
+  window.location.href = '/';
+};
+</script>
+
+<script>
+export default {
+  name: 'Login'
 };
 </script>
 
 <style scoped>
-/* ... existing styles ... */
+.login-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f0f2f5;
+}
+
+.login-form {
+  width: 300px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.register-link {
+  text-align: center;
+  margin-top: 10px;
+}
+
+.register-link a {
+  color: #409eff;
+  text-decoration: none;
+}
+
+.register-link a:hover {
+  text-decoration: underline;
+}
+
 </style>

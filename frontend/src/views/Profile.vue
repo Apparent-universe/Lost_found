@@ -43,95 +43,113 @@
   </div>
 </template>
 
-<script>
+<script setup>
+import { ref, onMounted } from 'vue';
 import { useUserStore } from '@/store/user';
 import userApi from '@/api/user';
+
+// 获取用户存储
+const userStore = useUserStore();
+
+// 用户数据
+const user = ref({});
+
+// 加载用户资料
+const loadUserProfile = async () => {
+  try {
+    // 从Pinia store获取用户信息或调用API
+    if (userStore.isAuthenticated && userStore.user) {
+      user.value = { ...userStore.user };
+    } else {
+      const response = await userApi.profile();
+      const userData = response.data;
+      userStore.login(userData, localStorage.getItem('token'));
+      user.value = { ...userData };
+    }
+  } catch (error) {
+    alert('加载用户信息失败');
+    console.error(error);
+  }
+};
+
+// 保存用户资料
+const saveProfile = async () => {
+  try {
+    // 调用API更新用户资料
+    const response = await userApi.profile(user.value);
+    
+    // 更新Pinia store中的用户信息
+    userStore.login(response.data, userStore.token);
+    
+    // 更新本地用户数据
+    user.value = { ...response.data };
+    
+    alert('资料更新成功');
+  } catch (error) {
+    alert('更新失败，请检查输入内容');
+    console.error(error);
+  }
+};
+
+// 修改密码
+const changePassword = () => {
+  const newPassword = prompt('请输入新密码');
+  if (newPassword) {
+    userApi.changePassword({ password: newPassword })
+      .then(() => {
+        alert('密码修改成功');
+      })
+      .catch((error) => {
+        alert('密码修改失败');
+        console.error(error);
+      });
+  }
+};
+
+// 登出
+const logout = () => {
+  userStore.logout();
+  window.location.href = '/login';
+};
+
+// 日期格式化
+const formatDate = (dateString) => {
+  if (!dateString) return '';
+  const date = new Date(dateString);
+  return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+};
+
+// 在组件挂载时加载用户资料
+onMounted(() => {
+  loadUserProfile();
+});
+</script>
+
+<script>
 import ImageUploader from '@/components/ImageUploader.vue';
 
 export default {
   components: {
     ImageUploader
   },
-  data() {
-    return {
-      user: {}
-    };
-  },
-  created() {
-    this.loadUserProfile();
-  },
-  methods: {
-    async loadUserProfile() {
-      try {
-        // 从Pinia store获取用户信息或调用API
-        const userStore = useUserStore();
-        
-        if (userStore.isAuthenticated && userStore.user) {
-          this.user = { ...userStore.user };
-        } else {
-          const response = await userApi.profile();
-          const userData = response.data;
-          userStore.login(userData, localStorage.getItem('token'));
-          this.user = { ...userData };
-        }
-      } catch (error) {
-        this.$message.error('加载用户信息失败');
-        console.error(error);
-      }
-    },
-    async saveProfile() {
-      try {
-        // 调用API更新用户资料
-        const response = await userApi.profile(this.user);
-        
-        // 更新Pinia store中的用户信息
-        const userStore = useUserStore();
-        userStore.login(response.data, userStore.token);
-        
-        // 更新本地用户数据
-        this.user = { ...response.data };
-        
-        this.$message.success('资料更新成功');
-      } catch (error) {
-        this.$message.error('更新失败，请检查输入内容');
-        console.error(error);
-      }
-    },
-    changePassword() {
-      this.$prompt('请输入新密码', '修改密码', {
-        confirmButtonText: '确定',
-        cancelButtonText: '取消',
-        type: 'warning',
-        inputType: 'password'
-      }).then(async ({ value }) => {
-        if (value) {
-          try {
-            // 调用API修改密码
-            await userApi.changePassword({ password: value });
-            this.$message.success('密码修改成功');
-          } catch (error) {
-            this.$message.error('密码修改失败');
-            console.error(error);
-          }
-        }
-      }).catch(() => {
-        // 取消操作
-      });
-    },
-    logout() {
-      const userStore = useUserStore();
-      userStore.logout();
-      this.$router.push('/login');
-    },
-    formatDate(dateString) {
-      if (!dateString) return '';
-      const date = new Date(dateString);
-      return `${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-    }
-  }
+  name: 'Profile'
 };
 </script>
 
 <style scoped>
-/* ... existing styles ... */
+.profile-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+}
+
+.profile-card {
+  width: 400px;
+}
+
+.profile-form {
+  margin-top: 20px;
+}
+
 </style>
