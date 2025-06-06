@@ -21,10 +21,12 @@ class LoginView(APIView):
                         settings.SECRET_KEY,
                         algorithm="HS256"
                     )
-                    return Response({
+                    re=Response({
                         "token": token,
                         "role": agent.role
                     })
+                    print(re.data)
+                    return re
                 else:
                     return Response({"error": "密码错误"}, status=status.HTTP_401_UNAUTHORIZED)
             except Agent.DoesNotExist:

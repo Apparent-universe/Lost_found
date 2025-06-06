@@ -44,33 +44,42 @@
 </template>
 
 <script setup>
-import { ref, onMounted } from 'vue';
+import { ref, onMounted, watchEffect } from 'vue';
 import { useUserStore } from '@/store/user';
 import userApi from '@/api/user';
 
 // 获取用户存储
 const userStore = useUserStore();
 
-// 用户数据
+// 用户数据 - 使用计算属性直接从store获取
 const user = ref({});
 
 // 加载用户资料
 const loadUserProfile = async () => {
   try {
-    // 从Pinia store获取用户信息或调用API
+    // 直接使用store中的用户数据
     if (userStore.isAuthenticated && userStore.user) {
       user.value = { ...userStore.user };
-    } else {
-      const response = await userApi.profile();
-      const userData = response.data;
-      userStore.login(userData, localStorage.getItem('token'));
-      user.value = { ...userData };
+      return;
     }
+
+    // 如果store中没有用户数据，则从API获取
+    const response = await userApi.profile();
+    const userData = response.data;
+    userStore.login(userData, localStorage.getItem('token'));
+    user.value = { ...userData };
   } catch (error) {
     alert('加载用户信息失败');
     console.error(error);
   }
 };
+
+// 监听用户数据变化并自动更新store
+watchEffect(() => {
+  if (user.value && userStore.isAuthenticated) {
+    userStore.updateUserInfo(user.value);
+  }
+});
 
 // 保存用户资料
 const saveProfile = async () => {
@@ -78,8 +87,8 @@ const saveProfile = async () => {
     // 调用API更新用户资料
     const response = await userApi.profile(user.value);
     
-    // 更新Pinia store中的用户信息
-    userStore.login(response.data, userStore.token);
+    // 直接更新store中的用户信息
+    userStore.updateUserInfo(response.data);
     
     // 更新本地用户数据
     user.value = { ...response.data };
@@ -135,21 +144,3 @@ export default {
   name: 'Profile'
 };
 </script>
-
-<style scoped>
-.profile-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100vh;
-}
-
-.profile-card {
-  width: 400px;
-}
-
-.profile-form {
-  margin-top: 20px;
-}
-
-</style>

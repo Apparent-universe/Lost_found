@@ -36,9 +36,13 @@ const onSubmit = async () => {
     // 使用API模块登录
     const response = await userApi.login(loginForm.value);
     
-    // 获取token和用户信息
+    // 获取token和用户信息（注意这里调整了数据结构）
     const token = response.data.token;
-    const userData = response.data.user;
+    const userData = {
+      id: response.data.id,
+      role: response.data.role,
+      username: loginForm.value.username
+    };
     
     // 使用Pinia store保存用户信息
     const userStore = useUserStore();
@@ -95,5 +99,4 @@ export default {
 .register-link a:hover {
   text-decoration: underline;
 }
-
-</style>
+</style scoped>
