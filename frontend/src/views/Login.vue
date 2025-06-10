@@ -23,6 +23,8 @@
 import { ref } from 'vue';
 import { useUserStore } from '@/store/user';
 import userApi from '@/api/user';
+import { jwtDecode } from 'jwt-decode'; // 修复导入方式，使用命名导出
+import { useRouter } from 'vue-router';
 
 // 表单数据
 const loginForm = ref({
@@ -30,26 +32,30 @@ const loginForm = ref({
   password: ''
 });
 
+const router = useRouter();
+
 // 提交登录表单
 const onSubmit = async () => {
   try {
+    console.log('提交登录表单');
     // 使用API模块登录
     const response = await userApi.login(loginForm.value);
-    
-    // 获取token和用户信息（注意这里调整了数据结构）
+
+    // 获取token并解析用户信息
     const token = response.data.token;
+    const decodedToken = jwtDecode(token); // 使用 jwtDecode 解析 JWT 令牌
     const userData = {
-      id: response.data.id,
-      role: response.data.role,
+      id: decodedToken.id, // 从令牌中提取用户ID
+      role: decodedToken.role, // 从令牌中提取用户角色
       username: loginForm.value.username
     };
-    
+
     // 使用Pinia store保存用户信息
     const userStore = useUserStore();
     userStore.login(userData, token);
-    
-    // 跳转到首页
-    window.location.href = '/';
+    console.log('登录成功', userData);
+    console.log('Token:', token);
+    router.push('/');
   } catch (error) {
     // 显示错误提示
     alert('登录失败，请检查用户名和密码');
@@ -99,4 +105,4 @@ export default {
 .register-link a:hover {
   text-decoration: underline;
 }
-</style scoped>
+</style>

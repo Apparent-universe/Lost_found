@@ -1,0 +1,1255 @@
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>失物招领系统</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/font-awesome@4.7.0/css/font-awesome.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.8/dist/chart.umd.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap"
+        rel="stylesheet">
+
+    <!-- Tailwind 配置 -->
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#165DFF',
+                        secondary: '#36D399',
+                        accent: '#FF9F43',
+                        danger: '#F87272',
+                        dark: '#1E293B',
+                        light: '#F8FAFC'
+                    },
+                    fontFamily: {
+                        inter: ['Inter', 'sans-serif'],
+                    },
+                },
+            }
+        }
+    </script>
+
+    <style type="text/tailwindcss">
+        @layer utilities {
+        .content-auto {
+          content-visibility: auto;
+        }
+        .card-shadow {
+          box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+        }
+        .hover-scale {
+          transition: transform 0.3s ease;
+        }
+        .hover-scale:hover {
+          transform: scale(1.02);
+        }
+        .text-balance {
+          text-wrap: balance;
+        }
+      }
+    </style>
+</head>
+
+<body class="font-inter bg-gray-50 text-dark">
+    <!-- 导航栏 -->
+    <header class="sticky top-0 z-50 bg-white/90 backdrop-blur-sm shadow-sm transition-all duration-300">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center">
+                    <a href="#" class="flex items-center">
+                        <i class="fa fa-search-plus text-primary text-2xl mr-2"></i>
+                        <span class="text-xl font-bold text-primary">失物招领</span>
+                    </a>
+                    <nav class="hidden md:ml-10 md:flex space-x-8">
+                        <a href="#home"
+                            class="text-dark hover:text-primary px-3 py-2 text-sm font-medium transition-colors">首页</a>
+                        <a href="#found"
+                            class="text-dark hover:text-primary px-3 py-2 text-sm font-medium transition-colors">招领信息</a>
+                        <a href="#lost"
+                            class="text-dark hover:text-primary px-3 py-2 text-sm font-medium transition-colors">丢失信息</a>
+                        <a href="#statistics"
+                            class="text-dark hover:text-primary px-3 py-2 text-sm font-medium transition-colors">统计</a>
+                    </nav>
+                </div>
+                <div class="flex items-center">
+                    <div class="hidden md:block">
+                        <button id="loginBtn"
+                            class="bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">登录</button>
+                    </div>
+                    <button id="mobileMenuBtn" class="md:hidden text-dark hover:text-primary">
+                        <i class="fa fa-bars text-xl"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 移动端菜单 -->
+        <div id="mobileMenu" class="hidden md:hidden bg-white border-t">
+            <div class="px-2 pt-2 pb-3 space-y-1 sm:px-3">
+                <a href="#home"
+                    class="block px-3 py-2 text-base font-medium text-dark hover:bg-gray-50 hover:text-primary rounded-md">首页</a>
+                <a href="#found"
+                    class="block px-3 py-2 text-base font-medium text-dark hover:bg-gray-50 hover:text-primary rounded-md">招领信息</a>
+                <a href="#lost"
+                    class="block px-3 py-2 text-base font-medium text-dark hover:bg-gray-50 hover:text-primary rounded-md">丢失信息</a>
+                <a href="#statistics"
+                    class="block px-3 py-2 text-base font-medium text-dark hover:bg-gray-50 hover:text-primary rounded-md">统计</a>
+                <button id="mobileLoginBtn"
+                    class="w-full mt-2 bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                    登录
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- 登录/注册模态框 -->
+    <div id="authModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">​</span>
+            <div
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <h3 class="text-lg leading-6 font-medium text-gray-900 mb-4">
+                                <span id="authModalTitle">登录</span>
+                            </h3>
+                            <div class="mt-2 space-y-4">
+                                <div>
+                                    <label for="email" class="block text-sm font-medium text-gray-700">邮箱</label>
+                                    <div class="mt-1">
+                                        <input id="email" name="email" type="email" autocomplete="email" required=""
+                                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                    </div>
+                                </div>
+                                <div>
+                                    <label for="password" class="block text-sm font-medium text-gray-700">密码</label>
+                                    <div class="mt-1">
+                                        <input id="password" name="password" type="password"
+                                            autocomplete="current-password" required=""
+                                            class="appearance-none block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm placeholder-gray-400 focus:outline-none focus:ring-primary focus:border-primary sm:text-sm">
+                                    </div>
+                                </div>
+                                <div class="flex items-center justify-between">
+                                    <div class="flex items-center">
+                                        <input id="remember-me" name="remember-me" type="checkbox"
+                                            class="h-4 w-4 text-primary focus:ring-primary border-gray-300 rounded">
+                                        <label for="remember-me" class="ml-2 block text-sm text-gray-900">记住我</label>
+                                    </div>
+                                    <div class="text-sm">
+                                        <a href="#" class="font-medium text-primary hover:text-primary/80">忘记密码?</a>
+                                    </div>
+                                </div>
+                                <button id="authSubmitBtn"
+                                    class="w-full bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                    登录
+                                </button>
+                                <div class="text-center text-sm text-gray-600">
+                                    <span id="toggleAuthMode">还没有账号? <a href="#"
+                                            class="text-primary font-medium">注册</a></span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 英雄区域 -->
+    <section id="home" class="relative bg-gradient-to-br from-primary/90 to-primary py-16 md:py-24">
+        <div class="absolute inset-0 overflow-hidden">
+            <div class="absolute -right-10 -top-10 w-64 h-64 bg-white/10 rounded-full blur-3xl"></div>
+            <div class="absolute left-1/4 top-1/2 w-96 h-96 bg-white/5 rounded-full blur-3xl"></div>
+        </div>
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+            <div class="flex flex-col md:flex-row items-center">
+                <div class="md:w-1/2 text-center md:text-left mb-10 md:mb-0">
+                    <h1 class="text-[clamp(2rem,5vw,3.5rem)] font-bold text-white leading-tight">
+                        让失物找到<br>回家的路
+                    </h1>
+                    <p class="text-[clamp(1rem,2vw,1.25rem)] text-white/90 mt-4 max-w-xl mx-auto md:mx-0">
+                        快速发布失物信息，轻松找回丢失物品。连接失主与拾获者，共建温馨互助社区。
+                    </p>
+                    <div
+                        class="mt-8 flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4 justify-center md:justify-start">
+                        <button id="publishFoundBtn"
+                            class="bg-white text-primary hover:bg-gray-100 px-6 py-3 rounded-lg font-medium transition-colors shadow-lg hover:shadow-xl">
+                            <i class="fa fa-plus-circle mr-2"></i>发布拾得信息
+                        </button>
+                        <button id="publishLostBtn"
+                            class="bg-transparent border-2 border-white text-white hover:bg-white/10 px-6 py-3 rounded-lg font-medium transition-colors">
+                            <i class="fa fa-search mr-2"></i>发布丢失信息
+                        </button>
+                    </div>
+                </div>
+                <div class="md:w-1/2 flex justify-center">
+                    <div class="relative">
+                        <div
+                            class="bg-white/20 backdrop-blur-sm rounded-2xl p-1 shadow-2xl transform rotate-2 hover:rotate-0 transition-transform duration-500">
+                            <img src="https://picsum.photos/seed/lostfound/600/400" alt="失物招领插图"
+                                class="rounded-xl max-w-full h-auto">
+                        </div>
+                        <div
+                            class="absolute -bottom-5 -left-5 bg-white rounded-xl shadow-xl p-4 transform -rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <div class="flex items-center">
+                                <div class="bg-green-100 p-2 rounded-full">
+                                    <i class="fa fa-check text-green-600"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium">今日已找回</p>
+                                    <p class="text-xl font-bold text-primary" id="todayRecovered">32</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div
+                            class="absolute -top-5 -right-5 bg-white rounded-xl shadow-xl p-4 transform rotate-3 hover:rotate-0 transition-transform duration-500">
+                            <div class="flex items-center">
+                                <div class="bg-blue-100 p-2 rounded-full">
+                                    <i class="fa fa-bell text-blue-600"></i>
+                                </div>
+                                <div class="ml-3">
+                                    <p class="text-sm font-medium">待认领</p>
+                                    <p class="text-xl font-bold text-primary" id="pendingClaims">47</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="absolute bottom-0 left-0 w-full overflow-hidden leading-0">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 120" preserveAspectRatio="none"
+                class="w-full h-12 md:h-16">
+                <path
+                    d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z"
+                    opacity=".25" class="fill-gray-50"></path>
+                <path
+                    d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z"
+                    opacity=".5" class="fill-gray-50"></path>
+                <path
+                    d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"
+                    class="fill-gray-50"></path>
+            </svg>
+        </div>
+    </section>
+
+    <!-- 搜索区域 -->
+    <section class="py-12 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div
+                class="max-w-3xl mx-auto bg-white rounded-xl shadow-lg p-6 transform -translate-y-8 hover:-translate-y-10 transition-transform duration-300">
+                <h2 class="text-xl font-bold text-center mb-6">快速搜索失物</h2>
+                <div class="flex flex-col sm:flex-row space-y-4 sm:space-y-0 sm:space-x-4">
+                    <div class="flex-1">
+                        <input type="text" placeholder="输入失物名称或特征..." id="searchInput"
+                            class="w-full px-4 py-3 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary">
+                    </div>
+                    <div>
+                        <button id="searchBtn"
+                            class="bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-lg font-medium transition-colors">
+                            <i class="fa fa-search mr-2"></i>搜索
+                        </button>
+                    </div>
+                </div>
+                <div class="mt-4 flex flex-wrap gap-2 justify-center">
+                    <span class="text-sm text-gray-500">热门搜索:</span>
+                    <a href="#" class="text-sm text-primary hover:text-primary/80">钱包</a>
+                    <a href="#" class="text-sm text-primary hover:text-primary/80">手机</a>
+                    <a href="#" class="text-sm text-primary hover:text-primary/80">钥匙</a>
+                    <a href="#" class="text-sm text-primary hover:text-primary/80">证件</a>
+                    <a href="#" class="text-sm text-primary hover:text-primary/80">书包</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 招领信息区域 -->
+    <section id="found" class="py-16 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">最新招领信息</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">发现的失物已在这里等待认领，看看有没有你丢失的物品</p>
+            </div>
+
+            <div class="flex flex-wrap -mx-4" id="foundItemsContainer">
+                <!-- 招领信息将通过JavaScript动态加载 -->
+                <div class="w-full text-center py-12" id="foundLoading">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p class="mt-2 text-gray-500">正在加载招领信息...</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <button id="loadMoreFoundBtn"
+                    class="bg-white border border-primary text-primary hover:bg-primary/5 px-6 py-3 rounded-lg font-medium transition-colors">
+                    查看更多招领信息 <i class="fa fa-angle-down ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 丢失信息区域 -->
+    <section id="lost" class="py-16 bg-gray-50">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">最新丢失信息</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">这些是用户发布的丢失物品信息，如果你有线索，请及时联系失主</p>
+            </div>
+
+            <div class="flex flex-wrap -mx-4" id="lostItemsContainer">
+                <!-- 丢失信息将通过JavaScript动态加载 -->
+                <div class="w-full text-center py-12" id="lostLoading">
+                    <div class="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    <p class="mt-2 text-gray-500">正在加载丢失信息...</p>
+                </div>
+            </div>
+
+            <div class="text-center mt-8">
+                <button id="loadMoreLostBtn"
+                    class="bg-white border border-primary text-primary hover:bg-primary/5 px-6 py-3 rounded-lg font-medium transition-colors">
+                    查看更多丢失信息 <i class="fa fa-angle-down ml-1"></i>
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- 统计区域 -->
+    <section id="statistics" class="py-16 bg-white">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-12">
+                <h2 class="text-[clamp(1.5rem,3vw,2.5rem)] font-bold text-dark">失物招领统计</h2>
+                <p class="text-gray-600 mt-4 max-w-2xl mx-auto">了解失物招领系统的整体情况，帮助你更好地利用平台功能</p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+                <div
+                    class="bg-gradient-to-br from-primary/90 to-primary rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">总招领信息</p>
+                            <h3 class="text-3xl font-bold mt-1" id="totalFound">247</h3>
+                            <p class="text-white/80 text-xs mt-2">较上月增长 12%</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-lg">
+                            <i class="fa fa-flag text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-gradient-to-br from-accent/90 to-accent rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">总丢失信息</p>
+                            <h3 class="text-3xl font-bold mt-1" id="totalLost">189</h3>
+                            <p class="text-white/80 text-xs mt-2">较上月增长 8%</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-lg">
+                            <i class="fa fa-search text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-gradient-to-br from-secondary/90 to-secondary rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">已找回物品</p>
+                            <h3 class="text-3xl font-bold mt-1" id="totalClaimed">156</h3>
+                            <p class="text-white/80 text-xs mt-2">较上月增长 15%</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-lg">
+                            <i class="fa fa-check-circle text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div
+                    class="bg-gradient-to-br from-dark/90 to-dark rounded-xl p-6 text-white shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <p class="text-white/80 text-sm">活跃用户</p>
+                            <h3 class="text-3xl font-bold mt-1" id="totalUsers">2,543</h3>
+                            <p class="text-white/80 text-xs mt-2">较上月增长 23%</p>
+                        </div>
+                        <div class="bg-white/20 p-3 rounded-lg">
+                            <i class="fa fa-users text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold mb-4">失物类型分布</h3>
+                    <div class="h-80">
+                        <canvas id="itemTypeChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-lg p-6">
+                    <h3 class="text-lg font-bold mb-4">每月找回数量</h3>
+                    <div class="h-80">
+                        <canvas id="monthlyChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- 发布信息模态框 -->
+    <div id="publishModal" class="fixed inset-0 z-50 hidden overflow-y-auto">
+        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 transition-opacity" aria-hidden="true">
+                <div class="absolute inset-0 bg-gray-500 opacity-75"></div>
+            </div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">​</span>
+            <div
+                class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
+                <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
+                            <div class="flex justify-between items-center mb-4">
+                                <h3 class="text-lg leading-6 font-medium text-gray-900">
+                                    <span id="publishModalTitle">发布拾得信息</span>
+                                </h3>
+                                <button id="closePublishModal" class="text-gray-400 hover:text-gray-500">
+                                    <i class="fa fa-times"></i>
+                                </button>
+                            </div>
+
+                            <form id="publishForm" enctype="multipart/form-data">
+                                <div class="mb-4">
+                                    <label for="itemType" class="block text-sm font-medium text-gray-700">物品类型</label>
+                                    <select id="itemType" name="itemType"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 focus:ring-opacity-50">
+                                        <option value="wallet">钱包</option>
+                                        <option value="phone">手机</option>
+                                        <option value="keys">钥匙</option>
+                                        <option value="idCard">证件</option>
+                                        <option value="bag">书包</option>
+                                        <option value="book">书籍</option>
+                                        <option value="watch">手表</option>
+                                        <option value="other">其他</option>
+                                    </select>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="itemName" class="block text-sm font-medium text-gray-700">物品名称</label>
+                                    <input type="text" id="itemName" name="itemName"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 focus:ring-opacity-50"
+                                        placeholder="请输入物品名称">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="itemDescription"
+                                        class="block text-sm font-medium text-gray-700">物品描述</label>
+                                    <textarea id="itemDescription" name="itemDescription" rows="3"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 focus:ring-opacity-50"
+                                        placeholder="请详细描述物品特征、颜色、品牌等信息"></textarea>
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="foundLocation"
+                                        class="block text-sm font-medium text-gray-700">拾得/丢失地点</label>
+                                    <input type="text" id="foundLocation" name="foundLocation"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 focus:ring-opacity-50"
+                                        placeholder="请输入拾得/丢失地点">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="foundTime"
+                                        class="block text-sm font-medium text-gray-700">拾得/丢失时间</label>
+                                    <input type="date" id="foundTime" name="foundTime"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 focus:ring-opacity-50">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label for="contactInfo"
+                                        class="block text-sm font-medium text-gray-700">联系方式</label>
+                                    <input type="text" id="contactInfo" name="contactInfo"
+                                        class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary/20 focus:ring-opacity-50"
+                                        placeholder="请输入您的手机号码或其他联系方式">
+                                </div>
+
+                                <div class="mb-4">
+                                    <label class="block text-sm font-medium text-gray-700">上传照片</label>
+                                    <div
+                                        class="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-gray-300 border-dashed rounded-md">
+                                        <div class="space-y-1 text-center">
+                                            <i class="fa fa-cloud-upload text-gray-400 text-3xl"></i>
+                                            <div class="flex text-sm text-gray-600">
+                                                <label for="file-upload"
+                                                    class="relative cursor-pointer bg-white rounded-md font-medium text-primary hover:text-primary/80 focus-within:outline-none">
+                                                    <span>上传照片</span>
+                                                    <input id="file-upload" name="image" type="file" class="sr-only">
+                                                </label>
+                                                <p class="pl-1">或拖放文件</p>
+                                            </div>
+                                            <p class="text-xs text-gray-500">
+                                                PNG, JPG (最大 10MB)
+                                            </p>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="mt-6">
+                                    <button type="submit"
+                                        class="w-full bg-primary hover:bg-primary/90 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                                        发布信息
+                                    </button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 页脚 -->
+    <footer class="bg-dark text-white py-12">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <i class="fa fa-search-plus text-primary text-2xl mr-2"></i>
+                        <span class="text-xl font-bold">失物招领</span>
+                    </div>
+                    <p class="text-gray-400 mb-4">
+                        连接失主与拾获者，共建温馨互助社区，让每一件失物都能找到回家的路。
+                    </p>
+                    <div class="flex space-x-4">
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weixin text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-weibo text-xl"></i>
+                        </a>
+                        <a href="#" class="text-gray-400 hover:text-white transition-colors">
+                            <i class="fa fa-qq text-xl"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold mb-4">快速链接</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#home" class="text-gray-400 hover:text-white transition-colors">首页</a></li>
+                        <li><a href="#found" class="text-gray-400 hover:text-white transition-colors">招领信息</a></li>
+                        <li><a href="#lost" class="text-gray-400 hover:text-white transition-colors">寻物信息</a></li>
+                        <li><a href=" #lost" class="text-gray-400 hover:text-white transition-colors">丢失信息</a></li>
+                        <li><a href="#statistics" class="text-gray-400 hover:text-white transition-colors">统计</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold mb-4">帮助中心</h3>
+                    <ul class="space-y-2">
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">如何发布信息</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">如何认领物品</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">常见问题</a></li>
+                        <li><a href="#" class="text-gray-400 hover:text-white transition-colors">联系我们</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h3 class="text-lg font-bold mb-4">联系我们</h3>
+                    <ul class="space-y-2">
+                        <li class="flex items-center">
+                            <i class="fa fa-envelope-o mr-2 text-primary"></i>
+                            <span class="text-gray-400">contact@lostfound.com</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fa fa-phone mr-2 text-primary"></i>
+                            <span class="text-gray-400">400-123-4567</span>
+                        </li>
+                        <li class="flex items-center">
+                            <i class="fa fa-map-marker mr-2 text-primary"></i>
+                            <span class="text-gray-400">北京市海淀区中关村大街1号</span>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="border-t border-gray-800 mt-12 pt-8 text-center text-gray-500 text-sm">
+                <p>© 2023 失物招领系统. 保留所有权利.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // API配置 - 请根据实际后端地址修改
+        const API_BASE_URL = 'http://0.0.0.0:8000/';
+
+        // DOM元素
+        const authModal = document.getElementById('authModal');
+        const authModalTitle = document.getElementById('authModalTitle');
+        const toggleAuthMode = document.getElementById('toggleAuthMode');
+        const loginBtn = document.getElementById('loginBtn');
+        const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+        const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+        const mobileMenu = document.getElementById('mobileMenu');
+        const publishModal = document.getElementById('publishModal');
+        const publishModalTitle = document.getElementById('publishModalTitle');
+        const publishFoundBtn = document.getElementById('publishFoundBtn');
+        const publishLostBtn = document.getElementById('publishLostBtn');
+        const closePublishModal = document.getElementById('closePublishModal');
+        const publishForm = document.getElementById('publishForm');
+        const searchBtn = document.getElementById('searchBtn');
+        const searchInput = document.getElementById('searchInput');
+        const loadMoreFoundBtn = document.getElementById('loadMoreFoundBtn');
+        const loadMoreLostBtn = document.getElementById('loadMoreLostBtn');
+        const foundItemsContainer = document.getElementById('foundItemsContainer');
+        const lostItemsContainer = document.getElementById('lostItemsContainer');
+        const foundLoading = document.getElementById('foundLoading');
+        const lostLoading = document.getElementById('lostLoading');
+
+        // 模态框控制
+        function openAuthModal(mode = 'login') {
+            authModal.classList.remove('hidden');
+            if (mode === 'login') {
+                authModalTitle.textContent = '登录';
+                toggleAuthMode.innerHTML = '还没有账号? <a href="#" class="text-primary font-medium">注册</a>';
+            } else {
+                authModalTitle.textContent = '注册';
+                toggleAuthMode.innerHTML = '已有账号? <a href="#" class="text-primary font-medium">登录</a>';
+            }
+        }
+
+        function closeAuthModal() {
+            authModal.classList.add('hidden');
+        }
+
+        function openPublishModal(type = 'found') {
+            publishModal.classList.remove('hidden');
+            if (type === 'found') {
+                publishModalTitle.textContent = '发布拾得信息';
+            } else {
+                publishModalTitle.textContent = '发布丢失信息';
+            }
+        }
+
+        function closePublishModal() {
+            publishModal.classList.add('hidden');
+        }
+
+        // 移动端菜单控制
+        function toggleMobileMenu() {
+            mobileMenu.classList.toggle('hidden');
+        }
+
+        // 事件监听器
+        loginBtn.addEventListener('click', () => openAuthModal('login'));
+        mobileLoginBtn.addEventListener('click', () => {
+            openAuthModal('login');
+            toggleMobileMenu();
+        });
+
+        toggleAuthMode.addEventListener('click', (e) => {
+            e.preventDefault();
+            if (authModalTitle.textContent === '登录') {
+                openAuthModal('register');
+            } else {
+                openAuthModal('login');
+            }
+        });
+
+        mobileMenuBtn.addEventListener('click', toggleMobileMenu);
+
+        publishFoundBtn.addEventListener('click', () => openPublishModal('found'));
+        publishLostBtn.addEventListener('click', () => openPublishModal('lost'));
+        closePublishModal.addEventListener('click', closePublishModal);
+
+        // 点击模态框外部关闭
+        authModal.addEventListener('click', (e) => {
+            if (e.target === authModal) {
+                closeAuthModal();
+            }
+        });
+
+        publishModal.addEventListener('click', (e) => {
+            if (e.target === publishModal) {
+                closePublishModal();
+            }
+        });
+
+        // 登录/注册表单提交
+        document.getElementById('authSubmitBtn').addEventListener('click', function (e) {
+            e.preventDefault();
+
+            const isLogin = authModalTitle.textContent === '登录';
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+
+            if (isLogin) {
+                // 登录逻辑
+                login(email, password);
+            } else {
+                // 注册逻辑
+                register(email, password);
+            }
+        });
+
+        // 发布信息表单提交
+        publishForm.addEventListener('submit', function (e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const isFound = publishModalTitle.textContent === '发布拾得信息';
+
+            // 添加物品类型
+            formData.append('type', isFound ? 'found' : 'lost');
+
+            // 提交表单数据
+            submitItem(formData);
+        });
+
+        // 搜索按钮点击事件
+        searchBtn.addEventListener('click', function () {
+            const query = searchInput.value.trim();
+            if (query) {
+                searchItems(query);
+            }
+        });
+
+        // 加载更多按钮点击事件
+        loadMoreFoundBtn.addEventListener('click', function () {
+            loadItems('found', true);
+        });
+
+        loadMoreLostBtn.addEventListener('click', function () {
+            loadItems('lost', true);
+        });
+
+        // 页面加载完成后初始化
+        document.addEventListener('DOMContentLoaded', function () {
+            // 加载初始数据
+            loadItems('found');
+            loadItems('lost');
+
+            // 初始化图表
+            initCharts();
+
+            // 平滑滚动
+            document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+                anchor.addEventListener('click', function (e) {
+                    e.preventDefault();
+
+                    const targetId = this.getAttribute('href');
+                    const targetElement = document.querySelector(targetId);
+
+                    if (targetElement) {
+                        window.scrollTo({
+                            top: targetElement.offsetTop - 80, // 考虑导航栏高度
+                            behavior: 'smooth'
+                        });
+
+                        // 如果是移动端，点击后关闭菜单
+                        if (!mobileMenu.classList.contains('hidden')) {
+                            toggleMobileMenu();
+                        }
+                    }
+                });
+            });
+        });
+
+        // API请求函数
+        // 登录
+        function login(email, password) {
+            fetch(`${API_BASE_URL}/auth/login`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('登录失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 保存token和用户信息
+                    localStorage.setItem('token', data.token);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+
+                    // 关闭登录模态框
+                    closeAuthModal();
+
+                    // 更新UI，显示用户已登录
+                    updateUserUI();
+
+                    // 显示成功消息
+                    showNotification('登录成功', 'success');
+                })
+                .catch(error => {
+                    console.error('登录错误:', error);
+                    showNotification('登录失败，请检查邮箱和密码', 'error');
+                });
+        }
+
+        // 注册
+        function register(email, password) {
+            fetch(`${API_BASE_URL}/auth/register`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('注册失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 显示成功消息
+                    showNotification('注册成功，请登录', 'success');
+
+                    // 切换到登录页面
+                    openAuthModal('login');
+                })
+                .catch(error => {
+                    console.error('注册错误:', error);
+                    showNotification('注册失败，请稍后再试', 'error');
+                });
+        }
+
+        // 提交物品信息
+        function submitItem(formData) {
+            const token = localStorage.getItem('token');
+
+            fetch(`${API_BASE_URL}/items`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                },
+                body: formData
+            })
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('提交失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 关闭发布模态框
+                    closePublishModal();
+
+                    // 重置表单
+                    publishForm.reset();
+
+                    // 刷新物品列表
+                    loadItems('found');
+                    loadItems('lost');
+
+                    // 显示成功消息
+                    showNotification('信息发布成功', 'success');
+                })
+                .catch(error => {
+                    console.error('提交错误:', error);
+                    showNotification('发布失败，请稍后再试', 'error');
+                });
+        }
+
+        // 加载物品列表
+        function loadItems(type, loadMore = false) {
+            // 显示加载状态
+            if (!loadMore) {
+                if (type === 'found') {
+                    foundItemsContainer.innerHTML = '';
+                    foundLoading.classList.remove('hidden');
+                } else {
+                    lostItemsContainer.innerHTML = '';
+                    lostLoading.classList.remove('hidden');
+                }
+            }
+
+            // 获取当前页数
+            let page = 1;
+            if (loadMore) {
+                page = type === 'found' ? parseInt(foundItemsContainer.dataset.page || '1') + 1 : parseInt(lostItemsContainer.dataset.page || '1') + 1;
+            }
+
+            fetch(`${API_BASE_URL}/items?type=${type}&page=${page}`)
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('加载失败');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    // 隐藏加载状态
+                    if (type === 'found') {
+                        foundLoading.classList.add('hidden');
+                    } else {
+                        lostLoading.classList.add('hidden');
+                    }
+
+                    // 保存当前页数
+                    if (type === 'found') {
+                        foundItemsContainer.dataset.page = page;
+                    } else {
+                        lostItemsContainer.dataset.page = page;
+                    }
+
+                    // 渲染物品列表
+                    renderItems(data.items, type, loadMore);
+
+                    // 如果没有更多数据，隐藏加载更多按钮
+                    if (data.items.length === 0 || data.items.length < 10) {
+                        if (type === 'found') {
+                            loadMoreFoundBtn.classList.add('hidden');
+                        } else {
+                            loadMoreLostBtn.classList.add('hidden');
+                        }
+                    } else {
+                        if (type === 'found') {
+                            loadMoreFoundBtn.classList.remove('hidden');
+                        } else {
+                            loadMoreLostBtn.classList.remove('hidden');
+                        }
+                    }
+                })
+                .catch(error => {
+                    console.error('加载错误:', error);
+                    if (type === 'found') {
+                        foundLoading.classList.add('hidden');
+                        foundItemsContainer.innerHTML = '<div class="w-full text-center py-12 text-gray-500">加载招领信息失败，请稍后再试</div>';
+                    } else {
+                        lostLoading.classList.add('hidden');
+                        lostItemsContainer.innerHTML = '<div class="w-full text-center py-12 text-gray-500">加载丢失信息失败，请稍后再试</div>';
+                    }
+                });
+        }
+
+        // 搜索物品
+        function searchItems(query) {
+            // 显示加载状态
+            foundItemsContainer.innerHTML = '';
+            lostItemsContainer.innerHTML = '';
+            foundLoading.classList.remove('hidden');
+            lostLoading.classList.remove('hidden');
+
+            // 同时搜索招领和丢失物品
+            Promise.all([
+                fetch(`${API_BASE_URL}/items?type=found&search=${query}`).then(res => res.json()),
+                fetch(`${API_BASE_URL}/items?type=lost&search=${query}`).then(res => res.json())
+            ])
+                .then(([foundData, lostData]) => {
+                    // 隐藏加载状态
+                    foundLoading.classList.add('hidden');
+                    lostLoading.classList.add('hidden');
+
+                    // 渲染搜索结果
+                    renderItems(foundData.items, 'found');
+                    renderItems(lostData.items, 'lost');
+
+                    // 如果没有结果，显示提示
+                    if (foundData.items.length === 0) {
+                        foundItemsContainer.innerHTML = '<div class="w-full text-center py-12 text-gray-500">没有找到相关招领信息</div>';
+                    }
+
+                    if (lostData.items.length === 0) {
+                        lostItemsContainer.innerHTML = '<div class="w-full text-center py-12 text-gray-500">没有找到相关丢失信息</div>';
+                    }
+                })
+                .catch(error => {
+                    console.error('搜索错误:', error);
+                    foundLoading.classList.add('hidden');
+                    lostLoading.classList.add('hidden');
+                    foundItemsContainer.innerHTML = '<div class="w-full text-center py-12 text-gray-500">搜索失败，请稍后再试</div>';
+                    lostItemsContainer.innerHTML = '<div class="w-full text-center py-12 text-gray-500">搜索失败，请稍后再试</div>';
+                });
+        }
+
+        // 渲染物品列表
+        function renderItems(items, type, append = false) {
+            const container = type === 'found' ? foundItemsContainer : lostItemsContainer;
+
+            if (!append) {
+                container.innerHTML = '';
+            }
+
+            if (items.length === 0) {
+                if (!append) {
+                    container.innerHTML = `<div class="w-full text-center py-12 text-gray-500">暂无${type === 'found' ? '招领' : '丢失'}信息</div>`;
+                }
+                return;
+            }
+
+            items.forEach(item => {
+                const card = createItemCard(item, type);
+                container.appendChild(card);
+            });
+        }
+
+        // 创建物品卡片
+        function createItemCard(item, type) {
+            const card = document.createElement('div');
+            card.className = 'w-full md:w-1/2 lg:w-1/3 px-4 mb-8';
+
+            // 格式化日期
+            const date = new Date(item.createdAt || item.time);
+            const formattedDate = date.toLocaleDateString('zh-CN');
+
+            // 物品类型图标映射
+            const typeIcons = {
+                wallet: 'fa-credit-card',
+                phone: 'fa-mobile',
+                keys: 'fa-key',
+                idCard: 'fa-id-card',
+                bag: 'fa-briefcase',
+                book: 'fa-book',
+                watch: 'fa-clock-o',
+                other: 'fa-question-circle'
+            };
+
+            // 物品类型文本映射
+            const typeTexts = {
+                wallet: '钱包',
+                phone: '手机',
+                keys: '钥匙',
+                idCard: '证件',
+                bag: '书包',
+                book: '书籍',
+                watch: '手表',
+                other: '其他'
+            };
+
+            // 卡片内容
+            card.innerHTML = `
+          <div class="bg-white rounded-xl shadow-md overflow-hidden hover:shadow-xl transition-shadow hover-scale">
+            <div class="relative">
+              <img src="${item.imageUrl || `https://picsum.photos/seed/${item.type || 'lostfound'}/600/400`}" alt="${item.name}" class="w-full h-48 object-cover">
+              ${item.status === 'new' ? '<div class="absolute top-4 right-4 bg-secondary text-white text-xs font-bold px-2 py-1 rounded">新发现</div>' : ''}
+            </div>
+            <div class="p-6">
+              <div class="flex justify-between items-start mb-3">
+                <h3 class="text-lg font-bold text-dark">${item.name}</h3>
+                <span class="text-xs text-gray-500">${formattedDate}</span>
+              </div>
+              <p class="text-gray-600 text-sm mb-4">${item.description || '暂无描述'}</p>
+              <div class="flex flex-wrap gap-2 mb-4">
+                <span class="text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded-full">
+                  <i class="fa ${typeIcons[item.type] || 'fa-question-circle'} mr-1"></i>${typeTexts[item.type] || '其他'}
+                </span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-gray-500"><i class="fa fa-map-marker mr-1"></i>${item.location || '未知地点'}</span>
+                <button class="text-primary hover:text-primary/80 font-medium text-sm view-item-btn" data-id="${item.id}">
+                  ${type === 'found' ? '联系认领' : '提供线索'} <i class="fa fa-arrow-right ml-1"></i>
+                </button>
+              </div>
+            </div>
+          </div>
+        `;
+
+            // 添加查看详情事件
+            const viewBtn = card.querySelector('.view-item-btn');
+            viewBtn.addEventListener('click', () => {
+                viewItemDetails(item.id, type);
+            });
+
+            return card;
+        }
+
+        // 查看物品详情
+        function viewItemDetails(itemId, type) {
+            // 这里可以实现查看物品详情的功能，例如打开详情模态框
+            console.log(`查看${type === 'found' ? '招领' : '丢失'}物品详情:`, itemId);
+
+            // 实际项目中可以实现如下功能：
+            // 1. 显示详情模态框
+            // 2. 从API获取物品详细信息
+            // 3. 在模态框中展示详细信息
+        }
+
+        // 更新用户UI
+        function updateUserUI() {
+            const user = JSON.parse(localStorage.getItem('user'));
+            const loginBtn = document.getElementById('loginBtn');
+            const mobileLoginBtn = document.getElementById('mobileLoginBtn');
+
+            if (user) {
+                // 用户已登录，更新按钮为用户信息
+                if (loginBtn) {
+                    loginBtn.innerHTML = `<i class="fa fa-user mr-1"></i> ${user.username || user.email}`;
+                    loginBtn.classList.remove('bg-primary');
+                    loginBtn.classList.add('bg-transparent', 'text-primary');
+                    loginBtn.addEventListener('click', showUserMenu);
+                }
+
+                if (mobileLoginBtn) {
+                    mobileLoginBtn.innerHTML = `<i class="fa fa-user mr-1"></i> ${user.username || user.email}`;
+                    mobileLoginBtn.classList.remove('bg-primary');
+                    mobileLoginBtn.classList.add('bg-transparent', 'text-primary');
+                }
+            } else {
+                // 用户未登录，恢复原始按钮
+                if (loginBtn) {
+                    loginBtn.innerHTML = '登录';
+                    loginBtn.classList.add('bg-primary');
+                    loginBtn.classList.remove('bg-transparent', 'text-primary');
+                    loginBtn.removeEventListener('click', showUserMenu);
+                    loginBtn.addEventListener('click', () => openAuthModal('login'));
+                }
+
+                if (mobileLoginBtn) {
+                    mobileLoginBtn.innerHTML = '登录';
+                    mobileLoginBtn.classList.add('bg-primary');
+                    mobileLoginBtn.classList.remove('bg-transparent', 'text-primary');
+                }
+            }
+        }
+
+        // 显示用户菜单（实际项目中实现）
+        function showUserMenu() {
+            console.log('显示用户菜单');
+        }
+
+        // 显示通知
+        function showNotification(message, type = 'info') {
+            // 创建通知元素
+            const notification = document.createElement('div');
+
+            // 设置样式
+            let bgColor, textColor, icon;
+            switch (type) {
+                case 'success':
+                    bgColor = 'bg-green-500';
+                    textColor = 'text-white';
+                    icon = 'fa-check-circle';
+                    break;
+                case 'error':
+                    bgColor = 'bg-red-500';
+                    textColor = 'text-white';
+                    icon = 'fa-times-circle';
+                    break;
+                case 'warning':
+                    bgColor = 'bg-yellow-500';
+                    textColor = 'text-white';
+                    icon = 'fa-exclamation-triangle';
+                    break;
+                default:
+                    bgColor = 'bg-blue-500';
+                    textColor = 'text-white';
+                    icon = 'fa-info-circle';
+            }
+
+            notification.className = `fixed top-4 right-4 ${bgColor} ${textColor} px-4 py-3 rounded-lg shadow-lg z-50 flex items-center transform transition-all duration-300 translate-x-full opacity-0`;
+
+            // 设置内容
+            notification.innerHTML = `
+          <i class="fa ${icon} mr-2"></i>
+          <span>${message}</span>
+        `;
+
+            // 添加到页面
+            document.body.appendChild(notification);
+
+            // 显示动画
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full', 'opacity-0');
+            }, 10);
+
+            // 自动关闭
+            setTimeout(() => {
+                notification.classList.add('translate-x-full', 'opacity-0');
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 300);
+            }, 3000);
+        }
+
+        // 初始化图表
+        function initCharts() {
+            // 物品类型分布图表
+            const typeCtx = document.getElementById('itemTypeChart');
+            if (typeCtx) {
+                new Chart(typeCtx, {
+                    type: 'doughnut',
+                    data: {
+                        labels: ['钱包', '手机', '钥匙', '证件', '书包', '书籍', '手表', '其他'],
+                        datasets: [{
+                            data: [25, 20, 15, 12, 10, 8, 5, 5],
+                            backgroundColor: [
+                                '#165DFF', '#36D399', '#FF9F43', '#F87272',
+                                '#7C3AED', '#EC4899', '#06B6D4', '#94A3B8'
+                            ],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'bottom',
+                                labels: {
+                                    padding: 20,
+                                    usePointStyle: true,
+                                    pointStyle: 'circle'
+                                }
+                            }
+                        },
+                        cutout: '70%'
+                    }
+                });
+            }
+
+            // 每月找回数量图表
+            const monthlyCtx = document.getElementById('monthlyChart');
+            if (monthlyCtx) {
+                new Chart(monthlyCtx, {
+                    type: 'line',
+                    data: {
+                        labels: ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'],
+                        datasets: [{
+                            label: '找回数量',
+                            data: [12, 19, 15, 20, 25, 30, 35, 40, 38, 45, 50, 55],
+                            borderColor: '#165DFF',
+                            backgroundColor: 'rgba(22, 93, 255, 0.1)',
+                            tension: 0.3,
+                            fill: true
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                display: false
+                            }
+                        },
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                grid: {
+                                    drawBorder: false
+                                }
+                            },
+                            x: {
+                                grid: {
+                                    display: false
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+        }
+    </script>
+</body>
+
+</html>

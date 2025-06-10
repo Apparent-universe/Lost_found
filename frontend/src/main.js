@@ -9,6 +9,9 @@ import { useUserStore } from './store/user.js';
 
 import axios from 'axios';
 
+// 清空 localStorage，确保状态从干净的环境开始
+localStorage.clear();
+
 // 配置 axios
 axios.defaults.baseURL = '/api'; // 根据你的后端API路径进行配置
 axios.interceptors.request.use(config => {

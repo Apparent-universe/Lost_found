@@ -144,3 +144,9 @@ CORS_ALLOW_ALL_ORIGINS = True  # 测试阶段允许跨域
 import os
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
+# 当请求路径匹配 MEDIA_URL（如 /media/avatar.jpg）
+# Django 会直接从 MEDIA_ROOT 指定的目录中返回文件
+# 仅在开发环境生效：生产环境需使用 Nginx/Apache 等服务器处理静态文件
+
+SECURE_CONTENT_TYPE_NOSNIFF = True  
+# 自动添加 x-content-type-options: nosniff
